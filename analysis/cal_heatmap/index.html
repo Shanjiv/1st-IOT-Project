@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script type="text/javascript" src="http://d3js.org/d3.v3.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.min.js"></script>
+<link rel="stylesheet" href="http://cdn.jsdelivr.net/cal-heatmap/3.3.10/cal-heatmap.css" />
+
+<style>
+
+body {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: relative;
+  width: 960px;
+}
+
+.axis text {
+  font: 10px sans-serif;
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.bar {
+  fill: steelblue;
+  fill-opacity: .9;
+}
+
+.x.axis path {
+  display: none;
+}
+
+label {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+</style>
+
+<body>
+  <div id="cal-heatmap"></div>
+
+  <script type="text/javascript">
+
+  d3.json("http://localhost:7654/api/v1/iot/sensors/2/measurements?interval=day", function(error, data) {
+    data = data.response.measurements;
+    var json_data = {};
+    var minValue = 200000;
+    var maxValue = 0;
+    data.forEach(function(d) {
+      var value = parseInt(d.value);
+      if (value < minValue)
+        minValue = value;
+      if (value > maxValue)
+        maxValue = value;
+      json_data[Date.parse(d.created_at) / 1000] = value;
+    });
+
+    var nIntervals = 5;
+    legendArray = [];
+    interval = (maxValue - minValue) / nIntervals;
+    for (var i = 0; i < nIntervals - 1; i++) {
+      legendArray.push(Math.round(minValue + i * interval))
+    }
+
+    var cal = new CalHeatMap();
+    cal.init({
+      data: json_data,
+      range: 2,
+      legend: legendArray,
+      domain: "month",
+      start: Date.parse(data[0].created_at),
+      end: Date.parse(data[data.length - 1].created_at),
+      tooltip: true,
+      itemName: ["lap", "laps"]
+    });
+  });
+
+  </script>
+</body>
+
